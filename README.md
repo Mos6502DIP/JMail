@@ -1,4 +1,4 @@
-# Jmail Server v1.0
+# Jmail Server v2.0
 
 Jmail is a simple socket-based mail server that allows clients to send and receive messages between users. The server handles multiple client connections and stores the messages persistently using JSON files.
 
