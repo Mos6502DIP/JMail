@@ -1,5 +1,6 @@
 import json
 import os
+import regex as re
 
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
@@ -54,9 +55,10 @@ def cprint(text, cap=" ", start=" ", end=" ", fill=" ", out_end="new", left_shif
 def tprint(string):
     if string[0:1] == 'c:':
         cprint(string[2:])
+    
 
 doc = load_jdoc("example.tdoc")
 for page in doc:
     for line in page:
-        jprint(line)
+        tprint(line)
     input(f"Page {doc.index(page)+1} of {len(doc)}")
