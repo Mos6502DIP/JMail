@@ -16,6 +16,7 @@ def load_jdoc(file_name):
                 page = []
             else:
                 page.append(line.strip())
+        doc.append(page)
         return doc
 
 def cprint(text, cap=" ", start=" ", end=" ", fill=" ", out_end="new", left_shift=0):
@@ -52,13 +53,22 @@ def cprint(text, cap=" ", start=" ", end=" ", fill=" ", out_end="new", left_shif
     else:
         print(output, end=out_end)
 
-def tprint(string):
-    if string[0:1] == 'c:':
-        cprint(string[2:])
+def tprint(doc):
+    margin = 0
+    for page in doc:
+        for line in page:
+            if line[0:2] == 'c:':
+                cprint(line[2:])
+            elif line[0:2] == 'm:':
+                margin = int(line[2:])
+            elif line == "@":
+                print(" ")
+            else:
+                print((margin*" ")+line)
+        input(f"Page {doc.index(page)+1} of {len(doc)}")
+    
     
 
 doc = load_jdoc("example.tdoc")
-for page in doc:
-    for line in page:
-        tprint(line)
-    input(f"Page {doc.index(page)+1} of {len(doc)}")
+tprint(doc)
+print(doc)
