@@ -1,90 +1,113 @@
 import socket
-import json
-import datetime
 import threading
+import json
+import time
+import datetime
+import TelePy as tp
+import jmail_client as jim
 
-s_ver = "1.0 "
-def load(file):
-    with open(file+".txt") as d:
-        return json.loads(d.read())
+active_terminal_clients = set()
+active_terminal_clients_lock = threading.Lock()
 
-def save(name, data):
-    with open(name+".txt", "w") as d:
-        d.write(json.dumps(data)) # Writes the dictonary to the first line
-    print(f"Data {name} has been saved!")
+start_time = None
 
-def substring(string):
-    start = string.index('(')
-    end = string.index(')',start+1)
-    return(string[start+1:end])
+def hash_password(string: str) -> str:
+    """Simple SHA-256 hash (use bcrypt/argon2 in production)."""
+    return hashlib.sha256(string.encode()).hexdigest()
 
-def message(string):
-    start = string.index(')') + 1
-    return (string[start:])
-
-def newclient(client,addr):
-    user_name = f"user{addr}"
-    users_info = load("userdat")
-    client.send(bytes('You have connected to Jmail.', 'utf-8'))
-    c_version = client.recv(1024).decode()
-    if float(c_version) >= float(s_ver):
-        client.send(bytes("good boi UWU","utf-8"))
-    else:
-        client.send(bytes("badver", "utf-8"))
-    user_name_t = client.recv(1024).decode()
-    password = client.recv(1024).decode()
-    if not(user_name_t in users_info):
-        client.send(bytes(f'1234', 'utf-8'))
-        client.send(bytes(f'Logon failed', 'utf-8'))
-    elif users_info[user_name_t] == password:
-        client.send(bytes(f'1969', 'utf-8'))
-        user_name = user_name_t
-        print(f"Has {user_name} connected as {addr}")
-        while True:
-            jmail = load("jmail")
-            client.send(bytes(json.dumps(jmail[user_name]), 'utf-8'))
-            useri = client.recv(1024).decode()
-            if  useri == "Banky":
-                print(f"{username} has refreshed!")
-            elif useri[0] == "(":
-                username = substring(useri)
-
-                jmail = load("jmail")
-                if not (username in jmail):
-                    jmail[username] = {}
+def load_json(file):
+    global settings
+    with open(file, "r") as f:
+        return json.load(f)    
 
 
-                jmail[username][f"{user_name} At:{str(datetime.datetime.now())}"] = message(useri).replace('\\n', '\n')
-                save("jmail", jmail)
+def setup(port):
+    global settings
+    Sct = socket.socket()  # creating the socket
+    
+    Sct.bind(("", int(port)))  # Bind port
+    Sct.listen(5)  # listens for clients
+    print(f'J-Mail server started on port:{port}')
+    return Sct
+
+def start_uptime():
+    global start_time
+    start_time = time.time()
+
+def get_uptime():
+    global start_time
+    if start_time is None:
+        return "Uptime not started."
+    elapsed_time = time.time() - start_time
+    hours, remainder = divmod(int(elapsed_time), 3600)
+    minutes, seconds = divmod(remainder, 60)
+    return f"{hours}h {minutes}m {seconds}s"
 
 
+        
 
-    else:
-        client.send(bytes(f'1234', 'utf-8'))
-        client.send(bytes(f'Logon failed', 'utf-8'))
-    print(f"Has {user_name} disconnected!")
-
-
-
-
-
-Sct=socket.socket()
-port = int(input("Custom port number. 90 for default:> "))
-Sct.bind(("", port))
-Sct.listen(100)
-print('Started server.')
-
-while True:
+def handle_client_connection_wrapper(client_side, client):
     try:
-        print("Ready for next connection!")
-        client,add=Sct.accept()
-        current_time = datetime.datetime.now()
-        if add[0] == "172.18.0.2":
-            print("Server Status Checked")
-        else:
-            print(add , "has connected to server" ,current_time)
-            threading._start_new_thread(newclient,(client,add))
+        print(f"Handling client {client.client_ip}")
+        client.client.settimeout(60)
+        client_side(client)
 
-    except:
-        print("Server did a crashy washy UWU!")
-Sct.close()
+    finally:
+        
+        with active_terminal_clients_lock:
+            active_terminal_clients.discard(threading.current_thread())
+        print(f"Client {client.client_ip} disconnected. {len(active_terminal_clients)} terminal clients online.")
+        client.client.close()
+
+
+def handle_ping_connection_wrapper(client_socket):
+    try:
+        client_socket.send(bytes("pong", "utf-8"))
+
+    finally:
+
+        client_socket.close()
+
+
+def start_jmail(port):
+
+    # Socket setup
+    
+    sct = setup(port)
+    
+   
+        
+    
+    # Main server script
+    while True:
+        try:
+            time.sleep(0.001)
+            print('Waiting for J-Mail')
+            client_socket, client_address = sct.accept()
+            print(f"Connection from {client_address}")
+            client_socket.settimeout(5)
+
+            try:
+                # Receive connection type (like 'terminal') from the client
+                header = json.dumps(client_socket.recv(1024))
+            except socket.timeout:
+                print(f"Timeout from {client_address}")
+                client_socket.close()
+                continue
+            
+            connection_type = header['protocol']
+            if connection_type  == 'J-Mail':
+                
+                jmail(header, client_socket, client_address)
+
+
+            else:
+                print(f"Unknown connection protocol '{connection_type}' from {client_address}")
+                client_socket.close()
+
+        except Exception as e:
+            print(f"Fatal error: {e}")
+            raise
+
+if __name__ == '__main__':
+    tp.start(jim.jmail_client) 
