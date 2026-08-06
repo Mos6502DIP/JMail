@@ -1,0 +1,13 @@
+{
+    "telepy": {
+        "port":1999,
+        "enabled":true,
+        "logs":true
+    },
+    "telnet": {
+        "port":2300,
+        "enabled":true,
+        "logs":true,
+        "ip-whitelist":true
+    }
+}
