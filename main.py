@@ -11,7 +11,9 @@ active_terminal_clients_lock = threading.Lock()
 
 start_time = None
 
-
+def hash_password(string: str) -> str:
+    """Simple SHA-256 hash (use bcrypt/argon2 in production)."""
+    return hashlib.sha256(string.encode()).hexdigest()
 
 def load_json(file):
     global settings
