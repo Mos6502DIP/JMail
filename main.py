@@ -96,8 +96,7 @@ def start_jmail(port):
             connection_type = header['protocol']
             if connection_type  == 'J-Mail':
                 
-
-                print(f"{len(active_terminal_clients)} terminal clients online.")
+                jmail(header, client_socket, client_address)
 
 
             else:
