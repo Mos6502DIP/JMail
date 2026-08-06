@@ -95,10 +95,16 @@ def run_server(name, func, *args):
     """Wrapper so server crashes don't silently kill the thread."""
     while running:
         try:
-            print(f"[{name}] Starting on port {args[1]}")
-            func(*args)
-            print(f"[{name}] Server stopped.")
-            break
+            if name == "jmail":
+                print(f"[{name}] Starting on port {args[0]}")
+                func(args[0])
+                print(f"[{name}] Server stopped.")
+                break
+            else:
+                print(f"[{name}] Starting on port {args[1]}")
+                func(*args)
+                print(f"[{name}] Server stopped.")
+                break
 
         except Exception:
             print(f"[{name}] Server crashed!")

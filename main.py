@@ -25,7 +25,7 @@ def setup(port):
     
     Sct.bind(("", int(port)))  # Bind port
     Sct.listen(5)  # listens for clients
-    print(f'Telepy server started on port:{port}')
+    print(f'J-Mail server started on port:{port}')
     return Sct
 
 def start_uptime():
