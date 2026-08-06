@@ -67,8 +67,63 @@ def tprint(doc):
                 print((margin*" ")+line)
         input(f"Page {doc.index(page)+1} of {len(doc)}")
     
+def segment_dictionary(data_dict, max_packet_size=1024, header_size=32):
+    # 1. Convert dictionary to UTF-8 bytes
+    raw_bytes = json.dumps(data_dict).encode('utf-8')
     
+    # 2. Calculate maximum payload per chunk
+    max_payload_size = max_packet_size - header_size
+    
+    # 3. Calculate total segments required
+    total_bytes = len(raw_bytes)
+    total_segments = (total_bytes + max_payload_size - 1) // max_payload_size
+    
+    segments = []
+    for seq_num in range(total_segments):
+        start = seq_num * max_payload_size
+        end = start + max_payload_size
+        chunk = raw_bytes[start:end]
+        
+        # 4. Create a fixed-size header (e.g., "SEQ:0001/0010|")
+        # Format: 4-digit sequence, 4-digit total, padded to header_size
+        header_str = f"SEQ:{seq_num + 1:04d}/{total_segments:04d}|"
+        header_bytes = header_str.encode('utf-8').ljust(header_size, b' ')
+        
+        # 5. Combine header and payload
+        packet = header_bytes + chunk
+        segments.append(packet)
+        
+    return segments
 
-doc = load_jdoc("example.tdoc")
-tprint(doc)
-print(doc)
+def reassemble_segments(received_packets, header_size=32):
+    # Sort by sequence number read from header
+    def get_seq(packet):
+        header = packet[:header_size].decode('utf-8').strip()
+        # Header format: "SEQ:0001/0010|"
+        seq_part = header.split('|')[0].replace('SEQ:', '')
+        curr_seq, _ = seq_part.split('/')
+        return int(curr_seq)
+    
+    sorted_packets = sorted(received_packets, key=get_seq)
+    
+    # Strip headers and reassemble raw payload
+    raw_bytes = b"".join(packet[header_size:] for packet in sorted_packets)
+    
+    # Deserialize back into dictionary
+    return json.loads(raw_bytes.decode('utf-8'))
+
+
+jmail = {
+    "sender" : "miku:lab.telepy.net",
+    "reciver" : "fractal:telepy.net",
+    "subject" : "Extract from the book you asked for!",
+    "tdoc" : load_jdoc("example.tdoc")
+}
+
+
+
+segments = segment_dictionary(jmail)
+
+made_mail = reassemble_segments(segments)
+
+tprint(made_mail["tdoc"])

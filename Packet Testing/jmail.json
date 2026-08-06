@@ -1,5 +1,7 @@
 {
     "sender" : "miku:lab.telepy.net",
+    "reciver" : "fractal:telepy.net",
+    "subject" : "Extract from the book you asked for!",
     "tdoc" : [
         ["m:10", "c:-=Transportation Problem=-", "@", "Public highways, like many other familiar", 
         "things, are utilized constantly with little thought of how", "indispensable they are to the conduct of the business of a", 
