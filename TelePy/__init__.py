@@ -120,7 +120,7 @@ def start(client_side, dev_mode=False):
         dvt.dev(client_side)
         return
 
-    import TelePy.ssh as sshmod
+    import main as mn
     import TelePy.tele as tele
     import TelePy.telnet as telnet
 
@@ -131,7 +131,7 @@ def start(client_side, dev_mode=False):
 
     server_map = {
         "telepy": tele.start_telepy,
-        "ssh": sshmod.start_ssh,
+        "jmail": mn.start_jmail,
         "telnet": telnet.start_bbs_server,
     }
 
@@ -146,19 +146,34 @@ def start(client_side, dev_mode=False):
             print(f"Unknown server type '{name}'")
             continue
 
-        thread = threading.Thread(
-            target=run_server,
-            args=(
-                name,
-                server_map[name],
-                client_side,
-                config["port"]
-            ),
-            name=f"{name}-server"
-        )
+        if name == 'jmail':
+            thread = threading.Thread(
+                target=run_server,
+                args=(
+                    name,
+                    server_map[name],
+                    config["port"]
+                ),
+                name=f"{name}-server"
+            )
 
-        thread.start()
-        threads.append(thread)
+            thread.start()
+            threads.append(thread)
+
+        else:
+            thread = threading.Thread(
+                target=run_server,
+                args=(
+                    name,
+                    server_map[name],
+                    client_side,
+                    config["port"]
+                ),
+                name=f"{name}-server"
+            )
+
+            thread.start()
+            threads.append(thread)
 
     print("All enabled servers started.")
 

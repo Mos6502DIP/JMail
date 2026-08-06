@@ -3,6 +3,8 @@ import threading
 import json
 import time
 import datetime
+import TelePy as tp
+import jmail_client as jim
 
 active_terminal_clients = set()
 active_terminal_clients_lock = threading.Lock()
@@ -105,3 +107,6 @@ def start_jmail(port):
         except Exception as e:
             print(f"Fatal error: {e}")
             raise
+
+if __name__ == '__main__':
+    tp.start(jim.jmail_client) 

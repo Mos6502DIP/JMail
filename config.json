@@ -9,5 +9,9 @@
         "enabled":true,
         "logs":true,
         "ip-whitelist":true
+    },
+    "jmail": {
+        "port":2005,
+        "enabled":true
     }
 }
