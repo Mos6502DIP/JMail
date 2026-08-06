@@ -19,6 +19,15 @@ def write_json(file, data):
         json.dump(data, f)
 
 def logon(username, password):
+    json = load_json(f"/jmail/{username}")
+    if not json:
+        return False
+    
+    if json["password"] ==  hash_password(password):
+        return True
+    
+    else:
+        return False
 
 
 def jmail_client(client):
