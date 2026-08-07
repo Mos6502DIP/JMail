@@ -104,6 +104,17 @@ def send_jmail(username, recipient, subject, tdoc):
         "tdoc" : tdoc
     }
 
+    jmail_segments = segment_dictionary(jmail)
+    jmail_hash = hash_password(json.dumps(jmail))
+
+    header = {
+        "protocol" : "J-Mail",
+        "jmail_size" : len(jmail_segments),
+        "sender" : f"{username}:{DOMAIN}",
+        "receiver" : recipient,
+        "hash" : jmail_hash
+    }
+
     
 
 def jmail_client(client):
