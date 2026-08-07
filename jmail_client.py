@@ -40,4 +40,6 @@ def jmail_client(client):
         client.print("Details incorrect")
 
     while True:
-        jmail = load_json(f'jmail/{username}.json')
+        jmails = load_json(f'jmail/{username}.json')
+        for jmail in jmails["unread"]:
+            print(jmails)
