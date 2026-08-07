@@ -134,9 +134,7 @@ def send_jmail(username, recipient, subject, tdoc):
             if ACK != "ACK":
                 return False
 
-        ACK = Sct.recv(1024).decode()
-        if ACK == "ACK": # Fixes a bug
-            return False
+        
         
         COM = Sct.recv(1024).decode()
         if COM == "DONE":
@@ -165,7 +163,7 @@ def jmail_client(client):
 
         command = client.input(":>")
         tdoc = load_tdoc("example.tdoc")
-        if send_jmail(username, "fractal:127.0.0.1", "Extract from the book you asked for!", tdoc):
+        if send_jmail(username, "fractal:127.0.0.1", "Poooo pants", tdoc):
             
             client.print("Yippppppppeeeee !")
         else:

@@ -132,7 +132,7 @@ def handle_jmail(client_socket, client_address, header):
             user_json = jim.load_json(f'jmail/{username}.json')
             user_json["unread"].insert(0, jmail)
             jim.write_json(f'jmail/{username}.json', user_json)
-            client_socket.send(bytes("DONE", "utf-8"))
+            client_socket.send(b'DONE')
 
             
 
