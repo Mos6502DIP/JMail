@@ -1,6 +1,7 @@
 import hashlib
 import json
 import shlex
+import socket
 
 DOMAIN = "127.0.0.1" #Enter domain or ip
 
@@ -115,7 +116,23 @@ def send_jmail(username, recipient, subject, tdoc):
         "hash" : jmail_hash
     }
 
-    
+    try:
+        Sct = socket.socket()
+        Sct.connect((server_ip, port))
+        Sct.send(bytes('json', "utf-8"))
+        server_info = json.loads(Sct.recv(6000).decode())
+        Sct.close()
+        output = f'''Name : {server_info['name']}
+Description : {server_info['description']}
+Uptime : {server_info['uptime']}
+Users Online {server_info['online']}
+Icon :'''
+        for line in server_info['icon']:
+            output += f'\n{line}'
+
+        return output
+    except (socket.timeout, socket.error) as e:
+        return f"Error: {e}"
 
 def jmail_client(client):
     client.print("Server Started Correctly")
