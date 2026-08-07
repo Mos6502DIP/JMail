@@ -1,3 +1,4 @@
 *.key
 /jmail/*.json
 **/__pycache__/
+*.pyc
