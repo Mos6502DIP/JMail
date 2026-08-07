@@ -1,6 +1,6 @@
 {
     "protocol" : "J-Mail",
-    "mail_size" : 2,
+    "jmail_size" : 2,
     "receiver" : "fractal:telepy.net",
     "sender" : "miku:lab.telepy.net",
     "hash" : "HASH"

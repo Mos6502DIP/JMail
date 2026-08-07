@@ -2,6 +2,7 @@ import hashlib
 import json
 import shlex
 import socket
+import datetime
 
 DOMAIN = "127.0.0.1" #Enter domain or ip
 
@@ -96,7 +97,7 @@ def logon(username, password):
         return False
 
 def send_jmail(username, recipient, subject, tdoc):
-    
+    receiver_domain = recipient.split(":")[1]
     jmail = {
         "datetime" : date(),
         "sender" : f"{username}:{DOMAIN}",
@@ -118,21 +119,28 @@ def send_jmail(username, recipient, subject, tdoc):
 
     try:
         Sct = socket.socket()
-        Sct.connect((server_ip, port))
-        Sct.send(bytes('json', "utf-8"))
-        server_info = json.loads(Sct.recv(6000).decode())
-        Sct.close()
-        output = f'''Name : {server_info['name']}
-Description : {server_info['description']}
-Uptime : {server_info['uptime']}
-Users Online {server_info['online']}
-Icon :'''
-        for line in server_info['icon']:
-            output += f'\n{line}'
+        Sct.connect((receiver_domain, 2005))
 
-        return output
+        Sct.send(bytes(json.dump(header), "utf-8"))
+        ACK = Sct.recv(1024).decode()
+        if not(ACK == "ACK"):
+            return False
+
+        for seg in jmail_segments:
+            while True:
+                Sct.send(seg, "utf-8")
+                ACK = Sct.recv(1024).decode()
+                if ACK == "ACK":
+                    break
+
+        ACK = Sct.recv(1024).decode()
+        if ACK == "DONE":
+            False
+
+        return True
     except (socket.timeout, socket.error) as e:
-        return f"Error: {e}"
+        print(f"Error: {e}")
+        return False
 
 def jmail_client(client):
     client.print("Server Started Correctly")
