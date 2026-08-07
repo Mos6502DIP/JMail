@@ -1,4 +1,5 @@
 {
+    "datetime" : "DATETIME",
     "sender" : "miku:lab.telepy.net",
     "reciver" : "fractal:telepy.net",
     "subject" : "Extract from the book you asked for!",

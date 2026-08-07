@@ -1,0 +1,6 @@
+paramiko
+telnetlib3
+requests
+diskcache
+textblob
+pyotp
