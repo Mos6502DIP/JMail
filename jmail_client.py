@@ -128,16 +128,21 @@ def send_jmail(username, recipient, subject, tdoc):
             return False
 
         for seg in jmail_segments:
+            
             Sct.send(seg)
             ACK = Sct.recv(1024).decode()
-            if ACK == "ACK":
+            if ACK != "ACK":
                 return False
 
         ACK = Sct.recv(1024).decode()
-        if ACK == "DONE":
+        if ACK == "ACK": # Fixes a bug
+            return False
+        
+        COM = Sct.recv(1024).decode()
+        if COM == "DONE":
             return True
-
-        return False
+        else:
+            return False
     except (socket.timeout, socket.error) as e:
         print(f"Error: {e}")
         return False
@@ -160,10 +165,10 @@ def jmail_client(client):
 
         command = client.input(":>")
         tdoc = load_tdoc("example.tdoc")
-        if not send_jmail(username, "fractal:127.0.0.1", "Extract from the book you asked for!", tdoc):
-            client.print("Jmail Failed to send!")
-
-        else:
+        if send_jmail(username, "fractal:127.0.0.1", "Extract from the book you asked for!", tdoc):
+            
             client.print("Yippppppppeeeee !")
+        else:
+            client.print("Jmail Failed to send!")
         
         

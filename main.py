@@ -117,9 +117,14 @@ def handle_jmail(client_socket, client_address, header):
 
 
         jmail_segments = []
-        for i in range(0, header["jmail_size"]):
-            jmail_segments.append(client_socket.recv(1064))
-            client_socket.send(bytes("ACK", "utf-8"))
+        total_segments = 1 
+
+        while len(jmail_segments) < total_segments:
+            packet = client_socket.recv(1056)  # 1024 payload + 32 header
+            client_socket.send(b"ACK")
+
+            total_segments = int(packet[9:13])
+            jmail_segments.append(packet)
 
         jmail = reassemble_segments(jmail_segments)
 
@@ -127,9 +132,9 @@ def handle_jmail(client_socket, client_address, header):
             user_json = jim.load_json(f'jmail/{username}.json')
             user_json["unread"].insert(0, jmail)
             jim.write_json(f'jmail/{username}.json', user_json)
-
-
             client_socket.send(bytes("DONE", "utf-8"))
+
+            
 
             
     finally:
@@ -152,7 +157,7 @@ def start_jmail(port):
             print('Waiting for J-Mail')
             client_socket, client_address = sct.accept()
             print(f"Connection from {client_address}")
-            client_socket.settimeout(5)
+            client_socket.settimeout(25)
 
             try:
                 # Receive connection type (like 'terminal') from the client
