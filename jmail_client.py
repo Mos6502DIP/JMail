@@ -9,9 +9,9 @@ def hash_password(string: str) -> str:
 
 def load_json(file:str):
     try:
-        with open(file, "r") as f:
+        with open(file, "r", encoding="utf-8") as f:
             return json.load(f)
-    except:
+    except (FileNotFoundError, json.JSONDecodeError, OSError) as e:
         return False
     
 def write_json(file, data):
@@ -19,7 +19,7 @@ def write_json(file, data):
         json.dump(data, f)
 
 def logon(username, password):
-    json = load_json(f"/jmail/{username}")
+    json = load_json(f"jmail/{username}.json")
     if not json:
         return False
     
@@ -38,3 +38,6 @@ def jmail_client(client):
 
     if not logon(username, password):
         client.print("Details incorrect")
+
+    while True:
+        jmail = load_json(f'jmail/{username}.json')
