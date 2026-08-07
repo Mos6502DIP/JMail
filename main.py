@@ -108,9 +108,11 @@ def handle_jmail(client_socket, client_address, header):
         if not check_domain(sender_domain, client_address):
             if not(sender_domain == "127.0.0.1"):
                 client_socket.close()
+                print("IP did not match sender")
         
         if not jim.load_json(f'jmail/{username}.json'):
             client_socket.close()
+            print("User not found")
 
 
         client_socket.send(bytes("ACK", "utf-8"))
@@ -173,7 +175,7 @@ def start_jmail(port):
                 
                 ping_thread = threading.Thread(
                     target=handle_jmail,
-                    args=(client_socket, client_address, header),
+                    args=(client_socket, client_address[0], header),
                     name=f"Json-{client_address}"
                 )
                 ping_thread.start()

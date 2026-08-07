@@ -4,7 +4,7 @@ import shlex
 import socket
 import datetime
 
-DOMAIN = "127.0.0.1" #Enter domain or ip
+DOMAIN = "lab.telepy.net" #Enter domain or ip
 
 def segment_dictionary(data_dict, max_packet_size=1024, header_size=32):
     # 1. Convert dictionary to UTF-8 bytes
@@ -163,7 +163,7 @@ def jmail_client(client):
 
         command = client.input(":>")
         tdoc = load_tdoc("example.tdoc")
-        if send_jmail(username, "fractal:127.0.0.1", "Poooo pants", tdoc):
+        if send_jmail(username, "fractal:telepy.net", "Poooo pants", tdoc):
             
             client.print("Yippppppppeeeee !")
         else:
