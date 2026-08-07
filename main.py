@@ -104,21 +104,26 @@ def handle_jmail(client_socket, client_address, header):
     try:
         sender_domain = header["sender"].split(":")[1]
         username = header["receiver"].split(":")[0]
+
         if not check_domain(sender_domain, client_address):
             if not(sender_domain == "127.0.0.1"):
                 client_socket.close()
         
         if not jim.load_json(f'jmail/{username}.json'):
             client_socket.close()
+
+
         client_socket.send(bytes("ACK", "utf-8"))
+
+
         jmail_segments = []
-        for i in range(0, (header["jmail_size"]-1)):
+        for i in range(0, header["jmail_size"]):
             jmail_segments.append(client_socket.recv(1064))
             client_socket.send(bytes("ACK", "utf-8"))
 
         jmail = reassemble_segments(jmail_segments)
 
-        if json.dumps(jmail) == header["hash"]:
+        if jim.hash_password(json.dumps(jmail)) == header["hash"]:
             user_json = jim.load_json(f'jmail/{username}.json')
             user_json["unread"].insert(0, jmail)
             jim.write_json(f'jmail/{username}.json', user_json)
@@ -151,7 +156,8 @@ def start_jmail(port):
 
             try:
                 # Receive connection type (like 'terminal') from the client
-                header = json.dumps(client_socket.recv(3000))
+                
+                header = json.loads(client_socket.recv(1024).decode().strip())
             except socket.timeout:
                 print(f"Timeout from {client_address}")
                 client_socket.close()

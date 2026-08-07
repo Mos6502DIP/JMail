@@ -121,23 +121,23 @@ def send_jmail(username, recipient, subject, tdoc):
         Sct = socket.socket()
         Sct.connect((receiver_domain, 2005))
 
-        Sct.send(bytes(json.dump(header), "utf-8"))
+        Sct.send(bytes(json.dumps(header), "utf-8"))
+
         ACK = Sct.recv(1024).decode()
         if not(ACK == "ACK"):
             return False
 
         for seg in jmail_segments:
-            while True:
-                Sct.send(seg, "utf-8")
-                ACK = Sct.recv(1024).decode()
-                if ACK == "ACK":
-                    break
+            Sct.send(seg)
+            ACK = Sct.recv(1024).decode()
+            if ACK == "ACK":
+                return False
 
         ACK = Sct.recv(1024).decode()
         if ACK == "DONE":
-            False
+            return True
 
-        return True
+        return False
     except (socket.timeout, socket.error) as e:
         print(f"Error: {e}")
         return False
@@ -151,6 +151,7 @@ def jmail_client(client):
 
     if not logon(username, password):
         client.print("Details incorrect")
+        client.close("Creeper Oh Man")
 
     while True:
         jmails = load_json(f'jmail/{username}.json')
@@ -159,6 +160,10 @@ def jmail_client(client):
 
         command = client.input(":>")
         tdoc = load_tdoc("example.tdoc")
-        send_jmail(username, "fractal:127.0.0.1", "Extract from the book you asked for!", tdoc)
+        if not send_jmail(username, "fractal:127.0.0.1", "Extract from the book you asked for!", tdoc):
+            client.print("Jmail Failed to send!")
+
+        else:
+            client.print("Yippppppppeeeee !")
         
         
