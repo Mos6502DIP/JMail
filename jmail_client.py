@@ -53,7 +53,7 @@ def reassemble_segments(received_packets, header_size=32):
 
 def date():
     current_datetime = datetime.datetime.now()
-    return current_datetime.date()
+    return f"{current_datetime.day}/{current_datetime.month}/{current_datetime.year} {current_datetime.hour}:{current_datetime.minute}:{current_datetime.second}"
 
 def hash_password(string: str) -> str:
     """Simple SHA-256 hash (use bcrypt/argon2 in production)."""
