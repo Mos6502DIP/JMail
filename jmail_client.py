@@ -7,6 +7,81 @@ import TelePy as tp
 
 DOMAIN = tp.load_json("config")["jmail"]["domain"] #Enter domain or ip
 
+def rprint(self, text, cap=" ", start=" ", end=" ", fill=" ", out_end="new", right_shift=0, printer=False):
+    # Regex to strip ANSI sequences for visual length calculation
+    ansi_escape = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
+    visible_text = ansi_escape.sub('', str(text))
+    
+    width = int(getattr(self, "column", 80))
+    
+    # Determine boundary caps
+    prefix = cap if cap != " " else start
+    suffix = cap if cap != " " else end
+    
+    inner = width - len(prefix) - len(suffix)
+    
+    # Push all padding to the left to align text to the right
+    total_padding = max(0, inner - len(visible_text))
+    left_padding_len = total_padding
+    right_padding_len = 0
+    
+    # Apply right-shift to push text away from the right border towards the left
+    if right_shift > 0:
+        shift = min(right_shift, left_padding_len)
+        left_padding_len -= shift
+        right_padding_len += shift
+        
+    left_pad = fill * left_padding_len
+    right_pad = fill * right_padding_len
+    
+    output = f"{prefix}{left_pad}{text}{right_pad}{suffix}"
+
+    if printer:
+        return output
+    else:
+        if out_end == "new":
+            self.print(output)
+        else:
+            self.print(output, end=out_end)
+    
+
+def cprint(self, text, cap=" ", start=" ", end=" ", fill=" ", out_end="new", left_shift=0, printer=False):
+    # Regex to strip ANSI sequences for visual length calculation
+    ansi_escape = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
+    visible_text = ansi_escape.sub('', str(text))
+    
+    width = int(getattr(self, "column", 80))
+    inner = width - len(start) - len(end)
+    
+    # Calculate required left and right padding based on VISIBLE characters
+    total_padding = max(0, inner - len(visible_text))
+    left_padding_len = total_padding // 2
+    right_padding_len = total_padding - left_padding_len
+    
+    # Apply left-shift to slant/offset the text to the left
+    if left_shift > 0:
+        shift = min(left_shift, left_padding_len)
+        left_padding_len -= shift
+        right_padding_len += shift
+        
+    left_pad = fill * left_padding_len
+    right_pad = fill * right_padding_len
+    
+    formatted_inner = f"{left_pad}{text}{right_pad}"
+    
+    if cap == " ":
+        output = start + formatted_inner + end
+    else:
+        output = cap + formatted_inner + cap
+
+    if printer:
+        return output
+    else:
+        if out_end == "new":
+            self.print(output)
+        else:
+            self.print(output, end=out_end)
+
 def segment_dictionary(data_dict, max_packet_size=1024, header_size=32):
     # 1. Convert dictionary to UTF-8 bytes
     raw_bytes = json.dumps(data_dict).encode('utf-8')
@@ -51,6 +126,24 @@ def reassemble_segments(received_packets, header_size=32):
     
     # Deserialize back into dictionary
     return json.loads(raw_bytes.decode('utf-8'))
+
+def print_jmail(client, jmail):
+    margin = 0
+    tdoc = jmail["tdoc"]
+    for page in tdoc:
+        for line in page:
+            if line[0:2] == 'c:':
+                client.cprint(line[2:])
+            elif line[0:2] == 'r:':
+                client.rprint(line[2:])
+            elif line[0:2] == 'm:':
+                margin = int(line[2:])
+            elif line == "@":
+                client.blankline()
+            else:
+                client.print((margin*" ")+line)
+
+        client.input(f"Page {tdoc.index(page)+1} of {len(tdoc)} Press enter to go to next page ...")
 
 def date():
     current_datetime = datetime.datetime.now()
@@ -149,7 +242,9 @@ def send_jmail(username, recipient, subject, tdoc):
         return False
 
 def jmail_client(client):
-    client.print("Server Started Correctly")
+    client.cprint = cprint.__get__(client)
+    client.rprint = rprint.__get__(client)
+    client.cls()
     client.print(f"Logon (Contact sysadmin for acount) DOMAIN:{DOMAIN}")
     client.print(f"IF you did not connect via this domain disconnect.")
     username = client.input("Username :>")
@@ -157,19 +252,39 @@ def jmail_client(client):
 
     if not logon(username, password):
         client.print("Details incorrect")
-        client.close("Creeper Oh Man")
+        client.close("Pingu is swiss propaganda.")
 
+    inbox = "unread"
     while True:
         jmails = load_json(f'jmail/{username}.json')
-        for jmail in jmails["unread"]:
-            client.print(f"({jmails["unread"].index(jmail)}) [{jmail["datetime"]}] From : {jmail["sender"]} Subject : {jmail["subject"]}")
+        client.cls()
+        for jmail in jmails[inbox]:
+            client.print(f"({jmails[inbox].index(jmail)}) [{jmail["datetime"]}] From : {jmail["sender"]} Subject : {jmail["subject"]}")
+        if len(jmails[inbox]) == 0:
+            client.input(f"You have no {inbox} jmails.")
+        client.print("Enter help for help")
+        command = client.input(":>")
 
-        # command = client.input(":>")
-        tdoc = load_tdoc("example.tdoc")
-        if send_jmail(username, client.input(":>"), "Test Jmail", tdoc):
-            
-            client.print("Yippppppppeeeee !")
-        else:
-            client.print("Jmail Failed to send!")
-        
+        command = shlex.split(command)
+
+        if command[0] == "help":
+            client.cls()
+            client.print("""
+Commands:
+jmail [address] "Subject" eg(jmail test:example.com "This is a test")
+read [jmail number] eg(read 1)
+toggle
+""")
+            client.input("Press enter to return")
+
+        elif command[0] == "toggle":
+            if inbox == "unread":
+                inbox = "read"
+            else:
+                inbox = "unread"
+
+        elif command[0] == "read":
+            client.cls()
+
+
         
