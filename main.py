@@ -89,10 +89,27 @@ def get_uptime():
 
 def check_domain(sender_domain, client_address):
     try:
-        target_ip = str(ipaddress.ip_address(client_address))
+        # Parse client_address into an IP object
+        target_ip = ipaddress.ip_address(client_address)
 
+        # 1. If sender_domain is already a valid IP address, compare directly
+        try:
+            sender_ip = ipaddress.ip_address(sender_domain)
+            return target_ip == sender_ip
+        except ValueError:
+            pass  # Not an IP address, proceed to DNS resolution
+
+        # 2. Resolve sender_domain as a hostname
         addr_info = socket.getaddrinfo(sender_domain, None)
-        resolved_ips = {info[4][0] for info in addr_info}
+
+        # Convert resolved IP strings to IP objects for reliable matching
+        resolved_ips = set()
+        for info in addr_info:
+            ip_str = info[4][0]
+            try:
+                resolved_ips.add(ipaddress.ip_address(ip_str))
+            except ValueError:
+                continue
 
         return target_ip in resolved_ips
 

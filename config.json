@@ -12,6 +12,7 @@
     },
     "jmail": {
         "port":2005,
-        "enabled":true
+        "enabled":true,
+        "domain": "192.168.0.19"
     }
 }

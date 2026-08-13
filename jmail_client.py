@@ -3,8 +3,9 @@ import json
 import shlex
 import socket
 import datetime
+import TelePy as tp
 
-DOMAIN = "lab.telepy.net" #Enter domain or ip
+DOMAIN = tp.load_json("config")["jmail"]["domain"] #Enter domain or ip
 
 def segment_dictionary(data_dict, max_packet_size=1024, header_size=32):
     # 1. Convert dictionary to UTF-8 bytes
@@ -98,6 +99,8 @@ def logon(username, password):
 
 def send_jmail(username, recipient, subject, tdoc):
     receiver_domain = recipient.split(":")[1]
+    if receiver_domain == DOMAIN:
+        receiver_domain = "127.0.0.1"
     jmail = {
         "datetime" : date(),
         "sender" : f"{username}:{DOMAIN}",
@@ -161,9 +164,9 @@ def jmail_client(client):
         for jmail in jmails["unread"]:
             client.print(f"({jmails["unread"].index(jmail)}) [{jmail["datetime"]}] From : {jmail["sender"]} Subject : {jmail["subject"]}")
 
-        command = client.input(":>")
+        # command = client.input(":>")
         tdoc = load_tdoc("example.tdoc")
-        if send_jmail(username, "fractal:telepy.net", "Poooo pants", tdoc):
+        if send_jmail(username, client.input(":>"), "Test Jmail", tdoc):
             
             client.print("Yippppppppeeeee !")
         else:
